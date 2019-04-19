@@ -1,0 +1,628 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+ 
+---
+## The MONICA (Multinational MONItoring of trends and determinants in CArdiovascular disease) Analysis
+
+ By Soumia Zohra El Mestari
+========================================================
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+suppressMessages(library(ISLR))
+suppressMessages(library(ggthemes))
+suppressMessages(library(ggplot2))
+suppressMessages(library(dplyr))
+suppressMessages(library(DAAG))
+suppressMessages(library(gridExtra))
+suppressMessages(library(GGally))
+suppressMessages(library(data.table))
+```
+
+```{r echo=FALSE, Load_the_Data,warning=FALSE,message=FALSE}
+# Load the Data
+# The data that I used are available in the DAAG library So if you installed the
+#Library the following #intruction will load the data 
+data("monica")
+
+# Please uncomment this section if you don't have the DAAG library installed 
+#(the dataset is joined )
+#monica <- read.csv("monicaDataSet.csv")
+```
+
+The monica dataset (Multinational MONItoring of trends and determinants in CArdiovascular disease) is a WHO (World Health Organization) dataset, the main purpose behind this project was to monitor trends in cardiovascular diseases, and to relate these to risk factor changes in the population over a ten year period. It was set up to explain the diverse trends in cardiovascular disease mortality which were observed from the 1970s onwards.
+The dataset contains  6357 rows and 12 following variables : <br>
+**outcome** :mortality outcome, a factor with levels live, dead <br>
+**age** : age at onset<br>
+**sex** : m = male, f = female<br>
+**hosp** : y = hospitalized, n = not hospitalized<br>
+**yronset** :year of onset<br>
+**premi** :previous myocardial infarction event, a factor with levels y, n, nk not known. <br>
+**smstat** :smoking status, a factor with levels c current, x ex-smoker, n non-smoker, nk not known
+**diabetes** :a factor with levels y, n, nk (not known) <br>
+**highbp** : high blood pressure, a factor with levels y, n, nk (not known)<br>
+**hichol** : high cholesterol, a factor with levels y, n nk (not known)<br>
+**angina** : a factor with levels y, n, nk angina is described by the American Heart Association as, “…chest pain or discomfort caused when your heart muscle doesn’t get enough oxygen-rich blood”<br>
+**stroke** : is the patient had or hadn't a stroke a factor with levels y, n, nk (not known) <br>
+
+
+# Univariate Plots Section
+
+**An overview about the variables** 
+
+```{r echo=FALSE, Univariate_Plots1,warning=FALSE, include=FALSE,message=FALSE }
+summary(monica)
+```
+
+**1st Exploration** : Let's explore the ages of people in this dataset 
+
+```{r echo=FALSE, Univariate_Plots2,warning=FALSE,message=FALSE}
+
+ggplot(aes(x = age),data = monica) +
+    geom_histogram(binwidth = 1,col = "black",fill = "sienna1") +
+    xlim(c(35,69)) +
+    ggtitle("The distribution of indivuals ages in this dataset") +
+    scale_x_sqrt()
+    
+
+```
+
+> People in this dataset are all adults ranging from 35 to 69 years old ,with the majority of them beyond 60 years old , (statistically the distribution is negatively skewed)<br>
+
+**2nd Exploration** let's explore the number of the mortality status <br>
+
+```{r echo=FALSE, Univariate_Plots3,warning=FALSE,message=FALSE}
+ggplot(aes(x = outcome),data = monica) +
+    geom_bar(fill = c("yellowgreen","grey")) +
+    ggtitle("The mortality status ")
+
+```
+
+> The number of death cases is less than the live cases .<br>
+
+**3rd exploration** : sex distribution in our dataset 
+
+```{r echo=FALSE, Univariate_Plots4,warning=FALSE,message=FALSE }
+ggplot(aes(x = sex),data = monica) +
+    geom_bar(fill = c("blue","pink")) +
+     scale_x_discrete(labels = c("Males", "Females")) +
+    ggtitle("The sex  status ")
+```
+
+> It's to note that we have more males than females in this dataset so maybe the sex can influence the outcome (we will explore this possibility latter <br> 
+
+**4th exploration** : hospitalized vs not hospitalized cases .
+
+```{r echo=FALSE, Univariate_Plots5,warning=FALSE,message=FALSE }
+ggplot(aes(x = hosp),data = monica) +
+    geom_bar(fill = c("orange","yellow")) +
+    scale_x_discrete(labels = c("Hospitalised", "Not Hospitalised")) +
+    ggtitle("Hospitalized Vs not hospitalized individuals ")
+```
+
+> Most people were hospitalized in this dataset <br>
+
+**5th variable** : smoking status <br>  
+
+```{r echo=FALSE, Univariate_Plots6,warning=FALSE,message=FALSE }
+ggplot(aes(x = smstat),data = monica) +
+    geom_bar(fill = c("wheat4","tomato2","olivedrab3","grey45")) +
+    scale_x_discrete(labels = c("Current\nSmokers", "ex-smokers","non-smokers"
+                                ,"not known")
+                    ) +
+    ggtitle("smoking status ")
+```
+
+> The most people here had a smoking experience either a pervious or a current one.
+
+**6th exploring medical status ** : In the Following I will explore the ratios of diffrent diseases and events : previous myocardial infarction event , diabetes , high blood pressure , high cholesterol , angina , and the stroke rates .
+
+```{r echo=FALSE, Univariate_Plots7,warning=FALSE,message=FALSE } 
+premi_plot <- ggplot(aes(x = premi) , data = monica) +
+    geom_bar(fill = c("blue","tan","dodgerblue1")) +
+    scale_x_discrete(labels = c("Had premi", "hadn't Premi","Not known")) +
+    ggtitle("Previous myocardial infarction event rate")
+
+diabetes_plot <- ggplot(aes(x = diabetes) , data = monica) +
+    geom_bar(fill = c("maroon","maroon2","maroon4")) +
+    scale_x_discrete(labels = c("Have diabetes", "Haven't diabetes"
+                                ,"Not known")
+                    ) +
+    ggtitle("Diabetes rates")
+
+highbp_plot <- ggplot(aes(x = highbp) , data = monica) +
+    geom_bar(fill = c("sienna1","sienna4","sienna2")) +
+    scale_x_discrete(labels = c("Have High \n blood pressure", 
+                                "Haven't High \n blood pressure","Not known")
+                    ) +
+    ggtitle("High blood pressure status")
+    
+
+hichol_plot <- ggplot(aes(x = hichol) , data = monica) +
+    geom_bar(fill = c("orange4","orange3","orange2")) +
+    scale_x_discrete(labels = c("Have High \n cholesterol",
+                                "Haven't High \n cholesterol","Not known")
+                    ) +
+    ggtitle("High Cholesterol status ")
+
+angina_plot <- ggplot(aes(x = angina) , data = monica) +
+    geom_bar(fill = c("chocolate4","chocolate2","chocolate1")) +
+    scale_x_discrete(labels = c("Angina", "Not angina","Not known")) +
+    ggtitle("angina status ")
+
+stroke_plot <- ggplot(aes(x = stroke) , data = monica) +
+    geom_bar(fill = c("red4","red2","red1")) +
+    scale_x_discrete(labels = c("Stroke", "No stroke","Not known")) +
+    ggtitle("stroke status ")
+
+grid.arrange(premi_plot,diabetes_plot,highbp_plot,hichol_plot,angina_plot,
+            stroke_plot ,ncol = 2)
+
+
+```
+
+> Generally speaking we have a high rate of high blood pressure in our population while diabetes  and stroke rates are low .
+
+# Univariate Analysis
+
+### What is the structure of your dataset?
+
+The dataset contains 6357 records or cases with 12 variables (outcome,age,sex,hosp,yronset,premi,smstat,highbp,hichol,angina,stroke)<br>
+ * The data collection was from 1989 to 1993 <br>
+ * All the idividuals were adults and the most of them were beyond 60 years old.<br>
+ * The number of males is roughly 4 times the number of females in this dataset. <br>
+ * Most of our cases had a smoking experience either previous or current <br>
+ * nearly 70% of the individuals were hospitalized <br>
+
+### What is/are the main feature(s) of interest in your dataset?
+The main features in this dataset are : the mortality rate ( outcome) , age . I want to determine the best features in predicting the life expectancy for cardiovascular patients.<br>
+
+### What other features in the dataset do you think will help support your \
+All the other features (stroke , angina ......) may influence the life expectancy. <br>
+
+### Did you create any new variables from existing variables in the dataset?
+No I haven't created any new variables <br> 
+### Of the features you investigated, were there any unusual distributions? 
+I scaled the age with sqrt to help determine and emphazise the most frequent age of these individuals.
+
+
+# Bivariate Plots Section
+
+> **1st life status over years** : 
+In this section we will explore the number of deaths and survival cases per years .<br>
+
+```{r echo=FALSE, Bivariate_Plots1,warning=FALSE,message=FALSE }
+
+df.per_year <- group_by(monica,monica$outcome,monica$yronset) %>%
+    summarise(n = n())
+ggplot(aes(x = df.per_year$`monica$yronset`,y = n),data = df.per_year) +
+    geom_line(aes(color = df.per_year$`monica$outcome`)) +
+    xlab('Years') +
+    ylab('count') +
+    labs(color = 'Life status') +
+    ggtitle("the evolution life status of cardioVasculaires patients 
+            From 1989 to 1993 ")
+
+```
+
+> We can See that in general the number of deaths tended to decrease which is a good indicator <br>
+
+**2nd Outcome by age** 
+
+```{r echo=FALSE, Bivariate_Plots2,warning=FALSE,message=FALSE }
+ggplot(aes(x = age),data = monica) +
+    geom_histogram(aes(fill = monica$outcome)) +
+    xlim(c(35,70)) +
+    xlab('Age') +
+    ylab('people count') +
+    labs(fill = 'Mortality outcome') +
+    theme_gdocs() +
+    ggtitle("Outcomes by age")
+
+```
+
+> There no general trend here but we can see that for individuals under 55 years old more people survived generally , and after 55 years old the the rate of deaths increases .
+
+**3rd Smoking Vs outcome** 
+
+```{r echo=FALSE, Bivariate_Plots3,warning=FALSE,message=FALSE}
+ggplot(monica,aes(smstat,group = outcome)) + 
+    geom_bar(aes(y = ..prop.., fill = factor(..x..))) +
+    scale_y_continuous(labels = scales::percent) + 
+    ylab("Relative Frenquencies") + 
+    xlab("Smoking status ") + 
+    facet_grid(outcome ~ .) +
+    scale_x_discrete(labels = c("Current\nSmokers", "ex-smokers",
+                                "non-smokers","not known")
+                    ) +
+    labs(title = "Patient Smoking Status",
+        subtitle = expression(paste(italic("by patient outcome")))) +
+    theme_economist()
+
+```
+
+> There is a large proportion of missing values (not known) in the deceased group, so with high level of missing data we are having a misrepresented group (deaths ) So this variable won't play a significant role in discovering trends. <br> 
+
+**4th High blood pressure Vs outcome**
+
+```{r  echo=FALSE, Bivariate_Plots4,warning=FALSE,message=FALSE}
+ggplot(monica,aes(highbp,group = outcome)) + 
+    geom_bar(aes(y = ..prop.., fill = factor(..x..))) +
+    scale_y_continuous(labels = scales::percent) + 
+    ylab("Relative Frenquencies") + 
+    xlab("High blood Pressure ") + 
+    facet_grid(outcome ~ .) +
+    scale_x_discrete(labels = c("Have High \n blood pressure", 
+                                "Haven't High \n blood pressure","Not known")
+                    ) +
+    labs(title = "Patient's high blood pressure Status", 
+         subtitle = expression(paste(italic("by patient outcome")))) +
+    theme_economist()
+```
+
+>  First of all just like with the smoking status we have a huge portion of missing data in of the groups (deceased group) this make it difficult to say whether the high blood pressure plays a significant role here or not , So this variable needs to be investigated in more depth.
+
+**5th Angina Vs outcome**
+
+```{r echo=FALSE, Bivariate_Plots5,warning=FALSE,message=FALSE}
+ggplot(monica,aes(angina,group = outcome)) + 
+    geom_bar(aes(y = ..prop.., fill = factor(..x..))) +
+    scale_y_continuous(labels = scales::percent) + 
+    ylab("Relative Frenquencies") + 
+    xlab("Angina ") + 
+    facet_grid(outcome ~ .) +
+    scale_x_discrete(labels = c("Angina", "Not angina","Not known")) +
+    labs(title = "Patient's Angina status ",
+        subtitle = expression(paste(italic("by patient outcome")))) +
+    theme_economist()
+
+```
+
+> in the living Group those who hadn't Angina survived more , So this variable maybe useful . It's to note that like the previous variables the
+deceased group suffers from a huge miss of data.
+
+**6th Cholesterol Vs outcome** 
+
+```{r echo=FALSE, Bivariate_Plots6,warning=FALSE,message=FALSE}
+ggplot(monica,aes(hichol,group = outcome)) + 
+    geom_bar(aes(y = ..prop.., fill = factor(..x..))) +
+    scale_y_continuous(labels = scales::percent) + 
+    ylab("Relative Frenquencies") + 
+    xlab("Cholesterol  ") + 
+    facet_grid(outcome ~ .) +
+    scale_x_discrete(labels = c("Have High \n cholesterol", 
+                                "Haven't High \n cholesterol","Not known")
+                    ) +
+    labs(title = "Patient's Cholesterol status ",
+        subtitle = expression(paste(italic("by patient outcome")))) +
+    theme_economist()
+
+```
+
+> We can see that people not having High cholesterol status are heavily represeted in both groups Plus having a big portion of missing data in the deaths group So this makes it hard to tell whether this variable is influencing or not .
+
+**7 Diabetes Vs outcome**
+
+```{r echo=FALSE, Bivariate_Plots7,warning=FALSE,message=FALSE}
+ggplot(monica,aes(diabetes,group = outcome)) + 
+    geom_bar(aes(y = ..prop.., fill = factor(..x..))) +
+    scale_y_continuous(labels = scales::percent) + 
+    ylab("Relative Frenquencies") + 
+    xlab("Diabetes  ") + 
+    facet_grid(outcome ~ .) +
+    scale_x_discrete(labels = c("Have diabetes", "Haven't diabetes",
+                                "Not known")
+                    ) +
+    labs(title = "Patient's Diabetes status ",
+        subtitle = expression(paste(italic("by patient outcome")))) +
+    theme_economist()
+
+```
+
+> In both groups those who have not diabetes are heavily represented Plus having a good portion of missing data in the deaths group , This variable may not be significant in discovering trends 
+
+**8th Stroke Vs outcome**
+
+```{r echo=FALSE, Bivariate_Plots8,warning=FALSE,message=FALSE}
+ggplot(monica,aes(stroke,group = outcome)) + 
+    geom_bar(aes(y = ..prop.., fill = factor(..x..))) +
+    scale_y_continuous(labels = scales::percent) + 
+    ylab("Relative Frenquencies") + 
+    xlab("Stroke  ") + 
+    facet_grid(outcome ~ .) +
+    scale_x_discrete(labels = c("Have stroke", 
+                                "Haven't stroke","Not known")
+                    ) +
+    labs(title = "Patient's stroke status ",
+        subtitle = expression(paste(italic("by patient outcome")))) +
+    theme_economist()
+
+```
+
+> The proportion of survivors who had a stroke is roughly similar to those who died .With as a huge missing data points in the deaths group.<br>
+
+**9th previous myocardial infarction event  Vs outcome**
+
+```{r echo=FALSE, Bivariate_Plots9,warning=FALSE,message=FALSE}
+ggplot(monica,aes(premi,group = outcome)) + 
+    geom_bar(aes(y = ..prop.., fill = factor(..x..))) +
+    scale_y_continuous(labels = scales::percent) + 
+    ylab("Relative Frenquencies") + 
+    xlab("previous myocardial infarction event  ") + 
+    facet_grid(outcome ~ .) +
+    scale_x_discrete(labels = c("Had premi", "hadn't Premi","Not known")) +
+    labs(title = "Patient's previous myocardial infarction event status ",
+        subtitle = expression(paste(italic("by patient outcome")))) +
+    theme_economist()
+   
+
+```
+
+> the biggest portion of survivors hadn't previous myocardial infarction event , when it comes to the deaths group it hard to tell because we have a good portion of missing data .
+
+**10th Hospitalization Vs outcome**
+
+```{r echo=FALSE, Bivariate_Plots10,warning=FALSE,message=FALSE}
+ggplot(monica,aes(hosp,group = outcome)) + 
+    geom_bar(aes(y = ..prop.., fill = factor(..x..))) +
+    scale_y_continuous(labels = scales::percent) + 
+    ylab("Relative Frenquencies") + 
+    xlab("Hospitalization") + 
+    facet_grid(outcome ~ .) +
+    scale_x_discrete(labels = c("Hospitalised", "Not Hospitalised")) +
+    labs(title = "Patient's Hospitalization status ", 
+        subtitle = expression(paste(italic("by patient outcome")))) +
+    theme_economist()
+
+```
+
+> Here it can easily be seen that From those who didn't survive a large portion were hospitalized and also all the survivors were hospitalized, so this variable is significant .
+
+**11th pairs correlations between variables**
+
+```{r echo=FALSE, Bivariate_Plots11,warning=FALSE,message=FALSE}
+ggpairs(monica ,columns = c(5:9),
+    lower = list(continuous = wrap("points", color = "red", alpha = 0.5), 
+                combo = wrap("box", color = "orange", alpha = 0.3), 
+                 discrete = wrap("facetbar", color = "maroon", alpha = 0.3) ), 
+    diag = list(continuous = wrap("densityDiag",  color = "blue", alpha = 0.5)))
+
+```
+
+
+```{r echo=FALSE, Bivariate_Plots12,warning=FALSE,message=FALSE}
+ggpairs(monica ,columns=c(2:8),
+    lower = list(continuous = wrap("points", color = "red", alpha = 0.5), 
+                 combo = wrap("box", color = "orange", alpha = 0.3), 
+                 discrete = wrap("facetbar", color = "maroon", alpha = 0.3)), 
+    diag = list(continuous = wrap("densityDiag",  color = "blue", alpha = 0.5)))
+
+```
+
+# Bivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the \
+* The general trend of surving is increasing throughout the years and decreasing for the deaths which is a good sign .<br> 
+* There is a relationship between hospitalization and the outcome. <br>
+* Angina may have a relashionship with the outcome but as the remain of variables the missing data makes it hard to tell <br>
+
+### Did you observe any interesting relationships between the other features \
+From the scatter plot matrix we can see  : 
+- Possible positive relationships between High blood pressure and each of : diabetes , previous myocardial infarction event <br>
+- More females have high Blood pressure .<br>
+- More males have diabetes . <br> 
+- Males tend to have more smoking experiences ( either current or previous ) <br> 
+
+### What was the strongest relationship you found?
+The hospitalization of cardiovascular patients plays a principal role in their survival , so the outcome is highly correlated with the hospitalization and the age of the patient.
+The hospitalization of cardiovascular patients plays a principal role in their survival , so the outcome is highly correlated with the hospitalization .
+
+
+# Multivariate Plots Section
+
+**Deaths Vs hospitalization status** :  
+
+```{r echo=FALSE, Multivariate_Plots1,warning=FALSE,message=FALSE}
+hops_vs_death <- subset(monica,monica$outcome != 'live')
+hops_vs_death <- hops_vs_death %>%
+    group_by(hops_vs_death$hosp,hops_vs_death$yronset) %>%
+    summarise(n = n())
+
+ggplot(aes(x = hops_vs_death$`hops_vs_death$yronset`,y = n),data = hops_vs_death) +
+    geom_point(aes(color = hops_vs_death$`hops_vs_death$hosp`)) +
+    xlab('Years') +
+    ylab('deaths count') +
+    labs(color = 'Hospitalization status') +
+    theme_stata() +
+    scale_colour_stata(scheme = "s1color") +
+    ggtitle("the evolution of deaths per hospitalization status from 1989 
+            to 1993 ")
+
+```
+
+> It can be seen that throghout the years the deaths number decreased rapidly when the patient was hospitalized.
+
+**Deaths Vs (Angina and hospitalization )**: 
+
+```{r echo=FALSE, Multivariate_Plots2,warning=FALSE,message=FALSE}
+# get only the deaths
+Hosp_angina_outcome <- subset(monica,monica$outcome != 'live')
+# Group by hospitalization , years , angina status 
+
+Hosp_angina_outcome <- Hosp_angina_outcome %>%
+    group_by(Hosp_angina_outcome$hosp,Hosp_angina_outcome$yronset,
+            Hosp_angina_outcome$angina) %>%
+    summarise( n = n())
+
+
+ggplot(aes(x = Hosp_angina_outcome$`Hosp_angina_outcome$yronset`,y = n),
+       data = Hosp_angina_outcome) +
+    geom_point(aes(color = Hosp_angina_outcome$`Hosp_angina_outcome$angina`:
+                       Hosp_angina_outcome$`Hosp_angina_outcome$hosp` )) +
+    xlab('Years') +
+    ylab('deaths count') +
+    labs(color = 'Angina : hospitalization status ') +
+    scale_color_brewer(type = 'div', palette = 'Set1', direction = 1) +
+    ggtitle("
+        the evolution of deaths per hospitalization status from 1989 to 1993 ")
+
+```
+
+> So far not having Angina and being hospitalized released in less deaths per years , while having Angina and not being hospitalized released in more deaths.
+
+**Let's explore the deaths for patients having high blood pressure and/or diabetes**:  
+
+```{r echo=FALSE, Multivariate_Plots3,warning=FALSE,message=FALSE}
+# get only the deaths
+Hbp_diabetes_outcome <- subset(monica,monica$outcome != 'live')
+# Group by high blood pressure  , years , diabetes 
+
+Hbp_diabetes_outcome <- Hbp_diabetes_outcome %>%
+    group_by(Hbp_diabetes_outcome$highbp,Hbp_diabetes_outcome$yronset,
+             Hbp_diabetes_outcome$diabetes) %>%
+    summarise( n = n())
+
+
+ggplot(aes(x = Hbp_diabetes_outcome$`Hbp_diabetes_outcome$yronset`,y = n),
+       data = Hbp_diabetes_outcome) +
+    geom_point(aes(color = Hbp_diabetes_outcome$`Hbp_diabetes_outcome$highbp`:
+                       Hbp_diabetes_outcome$`Hbp_diabetes_outcome$diabetes`)) +
+    xlab('Years') +
+    ylab('deaths count') +
+    labs(color = 'High blood pressure: diabetes status ') +
+    scale_color_brewer(type = 'div', palette = 9, direction = 1) +
+    labs(title = "Deaths from cardiovascular diseases \n", 
+         subtitle = expression(
+            paste(italic(" By High blood pressure and diabetes status "))))
+
+
+```
+
+> It can be seen that having a high blood pressure only  is influencing more on deaths than having diabetes and high blood pressure together.
+
+
+**Let's explore the deaths for patients having high blood pressure and/or previous myocardial infarction event**: 
+
+```{r echo=FALSE, Multivariate_Plots4,warning=FALSE,message=FALSE}
+# get only the deaths
+Hbp_premi_outcome <- subset(monica,monica$outcome != 'live')
+# Group by high blood pressure  , years , premi 
+
+Hbp_premi_outcome <- Hbp_premi_outcome %>%
+    group_by(Hbp_premi_outcome$highbp,Hbp_premi_outcome$yronset,
+             Hbp_premi_outcome$premi) %>%
+    summarise( n = n())
+
+
+ggplot(aes(x = Hbp_premi_outcome$`Hbp_premi_outcome$yronset`,y = n),
+       data = Hbp_premi_outcome) +
+    geom_point(aes(color = Hbp_premi_outcome$`Hbp_premi_outcome$highbp`:
+                       Hbp_premi_outcome$`Hbp_premi_outcome$premi`)) +
+    xlab('Years') +
+    ylab('deaths count') +
+    labs(color = 'High blood pressure: Premi  status ') +
+    scale_color_brewer(type = 'div', palette = 'Set2', direction = 1) +
+    labs(title = "Deaths from cardiovascular diseases ",
+        subtitle = expression(paste(italic(
+        "By High blood pressure and previous myocardial infarction event status"
+        ))))
+
+```
+
+ > It can be seen that having a high blood pressure only  is influencing more on deaths than having Premi  and high blood pressure together which interstingly scored less deaths than having none of them ! So there must be a stronger influencer on deaths ( hospitalization status ).
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the \
+The hospitazation plays a key role in decreasing the number of deaths , also having a high blood pressure increased the deaths . 
+
+### Were there any interesting or surprising interactions between features?
+The most suprising feature is that having high blood pressure and previous myocardial infarction event scored less deaths than not having any of them.
+
+------
+
+# Final Plots and Summary
+
+### Plot One
+
+```{r echo=FALSE, Plot_One,warning=FALSE,message=FALSE}
+ggplot(monica,aes(hosp,group = outcome)) + 
+    geom_bar(aes(y = ..prop.., fill = factor(..x..))) +
+    scale_y_continuous(labels = scales::percent) + 
+    ylab("Relative Frenquencies") + 
+    xlab("Hospitalization") + 
+    facet_grid(outcome ~ .) +
+    scale_x_discrete(labels = c("Hospitalised", "Not Hospitalised")) +
+    labs(title = "Patient's Hospitalization status ", 
+         subtitle = expression(paste(italic("by patient outcome")))) +
+    theme_gdocs()
+```
+
+### Description One:
+
+The plot shows clearly a strong relationship between hospitalization and the survival rate of cardiovascular patients, all of those who survived were hospitalised and most of those who died were not hospitalized.
+
+### Plot Two:
+
+```{r echo=FALSE, Plot_Two,warning=FALSE,message=FALSE}
+ggplot(aes(x = age),data = monica) +
+    geom_histogram(aes(fill = monica$outcome)) +
+    xlim(c(35,70)) +
+    xlab('Age') +
+    ylab('people count') +
+    labs(fill = 'Mortality outcome') +
+    theme_gdocs() +
+    ggtitle("Outcomes by age")
+
+```
+
+### Description Two:
+
+The age of the patient also played a role in decreasing the number of deaths , the older the patient is the higher the risk of death becomes .
+
+### Plot Three:
+
+```{r echo=FALSE, Plot_Three,warning=FALSE,message=FALSE}
+# get only the deaths
+Hbp_diabetes_outcome <- subset(monica,monica$outcome != 'live')
+# Group by high blood pressure  , years , diabetes 
+
+Hbp_diabetes_outcome <- Hbp_diabetes_outcome %>%
+    group_by(Hbp_diabetes_outcome$highbp,Hbp_diabetes_outcome$yronset,
+             Hbp_diabetes_outcome$diabetes) %>%
+    summarise( n = n())
+
+
+ggplot(aes(x = Hbp_diabetes_outcome$`Hbp_diabetes_outcome$yronset`,y = n),
+       data = Hbp_diabetes_outcome) +
+    geom_point(aes(color = Hbp_diabetes_outcome$`Hbp_diabetes_outcome$highbp`:
+                       Hbp_diabetes_outcome$`Hbp_diabetes_outcome$diabetes`)) +
+    xlab('Years') +
+    ylab('deaths count') +
+    labs(color = 'High blood pressure: diabetes status ') +
+    scale_color_brewer(type = 'div', palette = 9, direction = 1) +
+    labs(title = "Deaths from cardiovascular diseases \n", 
+         subtitle = expression(
+            paste(italic(" By High blood pressure and diabetes status "))))
+
+```
+
+### Description Three:
+
+Generally people havinf Dibetes have a higher chance to have high blood pressure which leds to cardiovascular issues. 
+The plot shows an interesting and surprising fact : high blood pressure only  is way more  influencing on deaths than having diabetes and high blood pressure together. This discovery leds us to think that there must be some kind of relationship between Diabetes and High blood pressure from a side and the deaths caused by cardiovascular diseases from another . Or maybe having both raised the chance of being diagnosed at least by one of them and as a result receive some kind of treatments that helped reduces the risks and seriousness of the cardiovascular events , however these are just assumptions and since we don't have enough data to support them , they will still only hypothesis under the scope of this study. 
+
+# Reflection:
+
+**Issues with this Analysis** :
+The main issue was the huge amount of missing data for many variables which made it difficult to identify which variables really influence the outcome , this also made it hard to tell which variables were really correlated to each other, and Also the nature of variables ( factors ) it would be more interesting if we had high blood pressure measurements instead of a categorical variable only.
+
+**Surprises** 
+Some of the well known causes of deaths in that period like diabetes didn't have much effect in this data . 
+
+**Conclusions** :
+This dataSet was challenging and surprising at the same time , in the beginning I was thinking that some variables like Premi , Angina and high cholesterol will play a significant role in causing deaths for cardiovascular patients , but when taking a look at the sources of data and the nationalities of patients ( see : https://thl.fi/publications/monica/coredb/table1.htm ) ,These countries were having poor economics by then So the consumption of fatty meals was not frequent which is the first cause of cholesterol ; So this fact can explain the weak relationship between cardiovascular patients deaths and their cholesterol levels. <br> 
+More interesting Investigation could've been done if we had numerical data instead of categorical variables , models could've been created for each variable's trends . <br> 
+The key factors in this investigation were the age of the patients , their high blood pressure levels and also the hospitalization status were all improuving the rate of survivals for these patients .
+
